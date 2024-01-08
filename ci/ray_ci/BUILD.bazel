@@ -32,6 +32,7 @@ py_binary(
     name = "test_in_docker",
     srcs = ["test_in_docker.py"],
     deps = [":ray_ci_lib"],
+    data = ["oss_config.yaml"],
 )
 
 py_binary(

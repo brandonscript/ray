@@ -199,7 +199,7 @@ class Test(dict):
 
     def update_from_s3(self) -> None:
         """
-        Update test object with data field from s3
+        Update test object with missing data field from s3
         """
         try:
             data = (
@@ -215,7 +215,8 @@ class Test(dict):
         except ClientError as e:
             logger.warning(f"Failed to update data for {self.get_name()} from s3:  {e}")
             return
-        self.update(json.loads(data))
+        for key, value in json.loads(data).items():
+            self[key] = self.get(key, value)
 
     def get_state(self) -> TestState:
         """
@@ -378,13 +379,19 @@ class Test(dict):
 
     def persist_result_to_s3(self, result: Result) -> bool:
         """
+        Persist result object to s3
+        """
+        self.persist_result_to_s3(TestResult.from_result(result))
+
+    def persist_test_result_to_s3(self, test_result: TestResult) -> bool:
+        """
         Persist test result object to s3
         """
         boto3.client("s3").put_object(
             Bucket=get_global_config()["state_machine_aws_bucket"],
             Key=f"{AWS_TEST_RESULT_KEY}/"
             f"{self.get_name()}-{int(time.time() * 1000)}.json",
-            Body=json.dumps(TestResult.from_result(result).__dict__),
+            Body=json.dumps(test_result.__dict__),
         )
 
     def persist_to_s3(self) -> bool:

@@ -40,8 +40,7 @@ def test_enough_gpus() -> None:
         assert False, "Should not raise an AssertionError"
 
 
-@mock.patch.object(tempfile, "mkdtemp")
-def test_run_tests_in_docker(tf) -> None:
+def test_run_tests_in_docker() -> None:
     inputs = []
 
     def _mock_popen(input: List[str]) -> None:
@@ -129,8 +128,7 @@ def test_ray_installation() -> None:
         ]
 
 
-@mock.patch.object(tempfile, "mkdtemp")
-def test_run_tests(tf) -> None:
+def test_run_tests() -> None:
     def _mock_run_tests_in_docker(
         test_targets: List[str],
         gpu_ids: List[int],
@@ -156,9 +154,6 @@ def test_run_tests(tf) -> None:
         "ci.ray_ci.tester_container.shard_tests", side_effect=_mock_shard_tests
     ), mock.patch(
         "ci.ray_ci.linux_tester_container.LinuxTesterContainer.install_ray",
-        return_value=None,
-    ), mock.patch(
-        "ci.ray_ci.linux_tester_container.LinuxTesterContainer.persist_test_results",
         return_value=None,
     ):
         container = LinuxTesterContainer("team", shard_count=2, shard_ids=[0, 1])

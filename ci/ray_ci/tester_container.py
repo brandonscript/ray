@@ -14,6 +14,9 @@ from ci.ray_ci.container import Container
 from ray_release.test import TestResult, Test
 
 
+PIPELINE_POSTMERGE = "0189e759-8c96-4302-b6b5-b4274406bf89"
+
+
 class TesterContainer(Container):
     """
     A wrapper for running tests in ray ci docker container
@@ -117,11 +120,18 @@ class TesterContainer(Container):
         )
 
     def _upload_test_results(self, bazel_log_dir: str) -> None:
+        if os.environ.get("BUILDKITE_PIPELINE_ID") != PIPELINE_POSTMERGE:
+            logger.info(
+                "Skip upload build info. We only upload on postmerge pipelines."
+            )
+            return
         for test, result in self._get_test_and_results(bazel_log_dir):
-            # TODO(can): upload test results
             logger.info(
                 f"Updating test object {test.get_name()} with result {result.status}"
             )
+            test.update_from_s3()
+            test.persist_to_s3()
+            test.persist_result_to_s3(result)
 
     def _get_test_and_results(
         self, bazel_log_dir: str
